@@ -2,16 +2,18 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
+//import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+//import 'src/config.dart';
+
 
 enum Direction { up, down, left, right }
 
 class SnakeSegment {
   Vector2 position;
   Color color;
-  SnakeSegment(this.position, this.color
-  );
+  SnakeSegment(this.position, this.color);
 }
 
 class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
@@ -26,6 +28,7 @@ class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
   double speed = 0.15; 
   bool isGameOver = false;
 
+  // Food timer variables moved inside the class
   double foodTimer = 0;
   static const double foodExpiry = 10.0;
 
@@ -38,11 +41,11 @@ class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
 
   @override
   FutureOr<void> onLoad() {
-
     final random = Random();
+    // Initialize the snake at a starting position
     for (int i = 0; i < 3; i++) {
       snakeBody.add(SnakeSegment(
-        Vector2(5.0-i, 5.0),
+        Vector2(5.0 - i, 5.0),
         snakeColors[random.nextInt(snakeColors.length)]
       ));
     }
@@ -55,33 +58,36 @@ class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
     int maxX = (size.x / cellSize).floor();
     int maxY = (size.y / cellSize).floor();
 
+    // Ensure food spawns within bounds
     foodLocation = Vector2(
       random.nextInt(maxX).toDouble(),
       random.nextInt(maxY).toDouble(),
     );
     foodColor = snakeColors[random.nextInt(snakeColors.length)];   
 
-    foodTimer = 0; 
+    foodTimer = 0; // Reset the 10s timer
   }
 
- @override
+  @override
   void update(double dt) {
     super.update(dt);
     if (isGameOver) return;
 
+    // Handle food disappearing after 10 seconds
     foodTimer += dt;
     if (foodTimer >= foodExpiry) {
-      //moveTimer = 0;
       spawnFood();
     }
+
+    // Handle movement speed
     moveTimer += dt;
     if (moveTimer >= speed) {
       moveTimer = 0;
       moveSnake();
-  }
-  }
+    }
+  } // Added missing closing brace for update
+
   void moveSnake() {
-    
     final newHead = snakeBody.first.position.clone();
 
     switch (currentDirection) {
@@ -91,48 +97,42 @@ class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
       case Direction.right: newHead.x += 1; break;
     }
 
-    // no walls
-   int maxX = (size.x / cellSize).floor();
-   int maxY = (size.y / cellSize).floor();
+    // Wrap-around logic (no walls)
+    int maxX = (size.x / cellSize).floor();
+    int maxY = (size.y / cellSize).floor();
 
     if (newHead.x < 0) newHead.x = maxX - 1.0;
     if (newHead.x >= maxX) newHead.x = 0;
     if (newHead.y < 0) newHead.y = maxY - 1.0;
     if (newHead.y >= maxY) newHead.y = 0;
     
-    //check for collisions with self
+    // Check for collisions with self
     if (snakeBody.any((s) => s.position == newHead)) {              
-     isGameOver = true;
+      isGameOver = true;
       return;
     }
 
-    //if we eat food
+    // If we eat food
     if (newHead == foodLocation) {
-  //add to body and spawn new food
-    snakeBody.insert(0, SnakeSegment(newHead, foodColor));
-    checkColorMatch();
-    spawnFood();
+      // Add the food color as the new head and grow the snake
+      snakeBody.insert(0, SnakeSegment(newHead, foodColor));
+      checkColorMatch();
+      spawnFood();
 
-  //increase speed
-    if (speed > 0.05) {
-      speed *= 0.95; 
+      // Increase speed by 5%
+      if (speed > 0.05) {
+        speed *= 0.95; 
+      }
+    } else {
+      // Normal movement: shift body segments
+      for (int i = snakeBody.length - 1; i > 0; i--) {
+        snakeBody[i].position = snakeBody[i - 1].position.clone();
+      }
+      // Update the head position
+      snakeBody.first.position = newHead;
     }
-  } else {
-  for (int i = snakeBody.length - 1; i > 0; i--) {
-    snakeBody[i].position = snakeBody[i - 1].position.clone();
-  }
-// update the body
-  snakeBody.first.position = newHead;
-  }
- } 
-  /*  // Collision: Food
-  if (newHead == foodLocation) {
-    checkColorMatch();
-    spawnFood();
-  } else {
-    snakeBody.removeLast();
-  }
-  */
+  } 
+
   void checkColorMatch() {
     if (snakeBody.length < 3) return;
     
@@ -141,11 +141,12 @@ class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
       if (snakeBody[i].color == snakeBody[i + 1].color &&
           snakeBody[i].color == snakeBody[i + 2].color) {
         toRemove.addAll([i, i + 1, i + 2]);
-        break;
+        break; // Remove first set of 3 matches found
       }
     }
+
     if (toRemove.isNotEmpty) {
-      toRemove.sort((a, b) => b.compareTo(a));
+      toRemove.sort((a, b) => b.compareTo(a)); // Sort descending
       for (var index in toRemove) {
         snakeBody.removeAt(index);
       }
@@ -161,13 +162,12 @@ class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
 
     // Draw Food
     canvas.drawRect(
-      Rect.fromLTWH(foodLocation.x * cellSize, foodLocation.y * cellSize, cellSize - 2, cellSize -2),
+      Rect.fromLTWH(foodLocation.x * cellSize, foodLocation.y * cellSize, cellSize - 2, cellSize - 2),
       Paint()..color = foodColor,
     );
 
     // Draw Snake
     for (var segment in snakeBody) {
-     
       canvas.drawRect(
         Rect.fromLTWH(
           segment.position.x * cellSize, 
@@ -175,25 +175,24 @@ class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
           cellSize - 1, 
           cellSize - 1
         ),
-        Paint()..color =segment.color,
+        Paint()..color = segment.color,
       );
     }
   }
+
   @override
   KeyEventResult onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
-    final isKeyDown = event is KeyDownEvent;
-
-    if (isKeyDown) {
+    if (event is KeyDownEvent) {
       if (keysPressed.contains(LogicalKeyboardKey.arrowUp) && currentDirection != Direction.down) {
-      currentDirection = Direction.up;
-    } else if (keysPressed.contains(LogicalKeyboardKey.arrowDown) && currentDirection != Direction.up) {
-      currentDirection = Direction.down;
-    } else if (keysPressed.contains(LogicalKeyboardKey.arrowLeft) && currentDirection != Direction.right) {
-      currentDirection = Direction.left;
-    } else if (keysPressed.contains(LogicalKeyboardKey.arrowRight) && currentDirection != Direction.left) {
-      currentDirection = Direction.right;
+        currentDirection = Direction.up;
+      } else if (keysPressed.contains(LogicalKeyboardKey.arrowDown) && currentDirection != Direction.up) {
+        currentDirection = Direction.down;
+      } else if (keysPressed.contains(LogicalKeyboardKey.arrowLeft) && currentDirection != Direction.right) {
+        currentDirection = Direction.left;
+      } else if (keysPressed.contains(LogicalKeyboardKey.arrowRight) && currentDirection != Direction.left) {
+        currentDirection = Direction.right;
+      }
     }
-}
     return KeyEventResult.handled;
   }
 
@@ -210,5 +209,6 @@ class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
       currentDirection = Direction.right;
     }
   }
+} // Added final missing closing brace for the class
 
-}
+
