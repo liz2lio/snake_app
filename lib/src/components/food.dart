@@ -4,7 +4,6 @@ import '../config.dart';
 
 class Food extends RectangleComponent with HasGameReference {
   final Color foodColor;
-  //static const double cellSize = 20.0;
   
 
   Food({
@@ -23,7 +22,6 @@ class Food extends RectangleComponent with HasGameReference {
   Future<void> onLoad() async {
     super.onLoad();
     
-    // Add a slight decorative border to make it look like a "collectible"
     add(
       RectangleComponent(
         size: size,
@@ -36,24 +34,3 @@ class Food extends RectangleComponent with HasGameReference {
   }
 }
 
-/* 
-
-
-
-
-
-class Food extends RectangleComponent {
-  final Color foodColor;
-
-  Food({
-    required Vector2 position,
-    required this.foodColor,
-  }) : super(
-          position: position,
-          size: Vector2.all(GameConfig.cellSize),
-          paint: Paint()..color = foodColor,
-        );
-}
-
-
- */

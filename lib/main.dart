@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
-//import 'snake_game.dart';
+import 'package:snake_app/snake_game.dart';
 import 'src/config.dart';
 import 'src/widgets/score_card.dart';
-import 'package:snake_app/snake_game.dart';
-
+import 'src/widgets/game_menu.dart';
 
 void main() => runApp(const MaterialApp(home: MainGamePage()));
 
@@ -43,21 +42,38 @@ class _MainGamePageState extends State<MainGamePage> {
             child: GameWidget<SnakeGame>(
               game: _game,
               overlayBuilderMap: {
+                // 1. The HUD Score Overlay
                 'ScoreOverlay': (context, game) {
-                try {
-                  final dynamic snakeGame = game;
-                  return ScoreCard(score: snakeGame.score);
-                } catch (e) {
-                  // Handle the case where the game is not of type SnakeGame
-                  return const SizedBox.shrink();
-                }
-                
-                
-                //final dynamic dynamicGame = game;
-                //return ScoreCard(score: dynamicGame.score);
+                  return ScoreCard(score: game.score);
+                },
+
+                // 2. The Universal Menu (Start, Game Over, Win)
+                'MenuOverlay': (context, game) {
+                  return ValueListenableBuilder<GameState>(
+                    valueListenable: game.state,
+                    builder: (context, state, _) {
+                      // Hide the menu if the game is currently being played
+                      if (state == GameState.playing) {
+                        return const SizedBox.shrink();
+                      }
+
+                      return ValueListenableBuilder<int>(
+                        valueListenable: game.highScore,
+                        builder: (context, currentHigh, _) {
+                          return GameMenu(
+                            state: state,
+                            score: game.score.value,
+                            highScore: currentHigh,
+                            onLevelSelect: (level) => game.setLevel(level),
+                          );
+                          }, 
+                      );
+                    },
+                  );
+                },
               },
-              },
-              initialActiveOverlays: const ['ScoreOverlay'],
+              
+              initialActiveOverlays: const ['ScoreOverlay', 'MenuOverlay'],
             ),
           ),
         ),
