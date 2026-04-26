@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flame/camera.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
@@ -21,6 +22,7 @@ class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
   final ValueNotifier<GameState> state = ValueNotifier(GameState.start);
   final ValueNotifier<int> score = ValueNotifier(0);
   final ValueNotifier<int> highScore = ValueNotifier<int>(0);
+  late final ValueNotifier<List<String>> completedLevels = ValueNotifier([]);
 
   // Use the cell size from config for consistency
   static const double cellSize = GameConfig.cellSize;
@@ -34,20 +36,55 @@ class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
   double moveTimer = 0;
   double speed = GameConfig.initialSpeed;
 
+  String currentLevel = 'Moderate';
+  
   final List<Color> snakeColors = GameConfig.matchColors;
 
   @override
-  FutureOr<void> onLoad() {
-    // We don't initialize snakeBody here anymore, resetGame() handles it.
+  FutureOr<void> onLoad() async {
+    await loadProgress(); //load saved data
+    
     camera.viewport = FixedAspectRatioViewport(aspectRatio: 6/10);
     camera.viewfinder.anchor = Anchor.topLeft;
     spawnFood();
     return super.onLoad();
   }
 
+  //load from local storage
+  Future<void> loadProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+    completedLevels.value = prefs.getStringList('completedLevels') ?? [];
+
+    highScore.value = prefs.getInt('highScore') ?? 0;
+  }
+
+  //save to local storage
+  Future<void> saveProgress(String level) async {
+    if (!completedLevels.value.contains(level)) {
+      completedLevels.value.add(level);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList('completedLevels', completedLevels.value);
+    }
+  }
+
+  //mark level complete
+  Future<void> markLevelComplete(String levelName) async {
+    final prefs = await SharedPreferences.getInstance();
+    List <String> completed = prefs.getStringList('completedLevels') ?? [];
+
+    if (!completed.contains(levelName)) {
+      completed.add(levelName);
+
+      await prefs.setStringList('completedLevels',completed);
+
+      completedLevels.value = List.from(completed);
+    }
+  }
+
+  //food
   void spawnFood() {
     final random = Random();
-    // GameConfig resolution
+    
     int maxX = (size.x / cellSize).floor();
     int maxY = (size.y / cellSize).floor();
 
@@ -181,6 +218,7 @@ class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
         // Win condition check
         if (score.value >= 1000) {
           state.value = GameState.won;
+          markLevelComplete(currentLevel);
         }
         break; 
       }
@@ -239,11 +277,13 @@ class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
     super.render(canvas);
   }
 
-  void updateScore(int points) {
+  void updateScore(int points) async {
     score.value += points;
 
     if (score.value > highScore.value) {
       highScore.value = score.value;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('highScore', highScore.value);
     }
   }
 
