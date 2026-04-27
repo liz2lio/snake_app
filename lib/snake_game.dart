@@ -37,7 +37,7 @@ class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
   double speed = GameConfig.initialSpeed;
 
   String currentLevel = 'Moderate';
-  
+
   final List<Color> snakeColors = GameConfig.matchColors;
 
   @override
@@ -100,6 +100,8 @@ class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
 
 
   void setLevel(String level) {
+    currentLevel = level;
+    
     switch (level) {
       case 'Easy': speed = GameConfig.initialSpeed * 1.5; 
       break;
