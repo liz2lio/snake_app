@@ -39,67 +39,139 @@ class _MainGamePageState extends State<MainGamePage> {
               borderRadius: isDesktop ? BorderRadius.circular(20) : BorderRadius.zero,
               border: isDesktop ? Border.all(color: Colors.white10) : null,
             ),
-            child: GestureDetector(
-              onPanEnd: (details) {
-                final velocity = details.velocity.pixelsPerSecond;
-                const double threshold = 500.0; // Minimum velocity to register as swipe
-
-                if (velocity.dx.abs() > velocity.dy.abs()) {
-                  // Horizontal swipe
-                  if (velocity.dx > threshold) {
-                    _game.changeDirection(Direction.right);
-                  } else if (velocity.dx < -threshold) {
-                    _game.changeDirection(Direction.left);
-                  }
-                } else {
-                  // Vertical swipe
-                  if (velocity.dy > threshold) {
-                    _game.changeDirection(Direction.down);
-                  } else if (velocity.dy < -threshold) {
-                    _game.changeDirection(Direction.up);
-                  }
-                }
-              },
-              child: GameWidget<SnakeGame>(
-                game: _game,
-                overlayBuilderMap: {
-                  // 1. The HUD Score Overlay
-                  'ScoreOverlay': (context, game) {
-                    return ScoreCard(score: game.score);
-                  },
-
-                  // 2. The Universal Menu (Start, Game Over, Win)
-                  'MenuOverlay': (context, game) {
-                    return ValueListenableBuilder<GameState>(
-                      valueListenable: game.state,
-                      builder: (context, state, _) {
-                        // Hide the menu if the game is currently being played
-                        if (state == GameState.playing) {
-                          return const SizedBox.shrink();
-                        }
-
-                        return ValueListenableBuilder<int>(
-                          valueListenable: game.highScore,
-                          builder: (context, currentHigh, _) {
-                            return GameMenu(
-                              state: state,
-                              score: game.score.value,
-                              highScore: currentHigh,
-                              onLevelSelect: (level) => game.setLevel(level),
-                            );
-                            }, 
-                        );
-                      },
-                    );
-                  },
+            child: GameWidget<SnakeGame>(
+              game: _game,
+              overlayBuilderMap: {
+                // 1. The HUD Score Overlay
+                'ScoreOverlay': (context, game) {
+                  return ScoreCard(score: game.score);
                 },
-                
-                initialActiveOverlays: const ['ScoreOverlay', 'MenuOverlay'],
-              ),
+
+                // 2. The Universal Menu (Start, Game Over, Win)
+                'MenuOverlay': (context, game) {
+                  return ValueListenableBuilder<GameState>(
+                    valueListenable: game.state,
+                    builder: (context, state, _) {
+                      // Hide the menu if the game is currently being played
+                      if (state == GameState.playing) {
+                        return const SizedBox.shrink();
+                      }
+
+                      return ValueListenableBuilder<int>(
+                        valueListenable: game.highScore,
+                        builder: (context, currentHigh, _) {
+                          return GameMenu(
+                            state: state,
+                            score: game.score.value,
+                            highScore: currentHigh,
+                            onLevelSelect: (level) => game.setLevel(level),
+                          );
+                          }, 
+                      );
+                    },
+                  );
+                },
+
+                // 3. Controls Overlay for touch devices
+                'ControlsOverlay': (context, game) {
+                  return ControlsOverlay(game: game as SnakeGame);
+                },
+              },
+              
+              initialActiveOverlays: const ['ScoreOverlay', 'MenuOverlay', 'ControlsOverlay'],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class ControlsOverlay extends StatelessWidget {
+  final SnakeGame game;
+
+  const ControlsOverlay({super.key, required this.game});
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final buttonSize = 60.0;
+
+    return Stack(
+      children: [
+        // Left button
+        Positioned(
+          left: 20,
+          top: size.height / 2 - buttonSize / 2,
+          child: SizedBox(
+            width: buttonSize,
+            height: buttonSize,
+            child: ElevatedButton(
+              onPressed: () => game.changeDirection(Direction.left),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black.withOpacity(0.7),
+                foregroundColor: Colors.white,
+                shape: const CircleBorder(),
+              ),
+              child: const Icon(Icons.arrow_left, size: 30),
+            ),
+          ),
+        ),
+        // Right button
+        Positioned(
+          right: 20,
+          top: size.height / 2 - buttonSize / 2,
+          child: SizedBox(
+            width: buttonSize,
+            height: buttonSize,
+            child: ElevatedButton(
+              onPressed: () => game.changeDirection(Direction.right),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black.withOpacity(0.7),
+                foregroundColor: Colors.white,
+                shape: const CircleBorder(),
+              ),
+              child: const Icon(Icons.arrow_right, size: 30),
+            ),
+          ),
+        ),
+        // Up button
+        Positioned(
+          top: 20,
+          left: size.width / 2 - buttonSize / 2,
+          child: SizedBox(
+            width: buttonSize,
+            height: buttonSize,
+            child: ElevatedButton(
+              onPressed: () => game.changeDirection(Direction.up),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black.withOpacity(0.7),
+                foregroundColor: Colors.white,
+                shape: const CircleBorder(),
+              ),
+              child: const Icon(Icons.arrow_upward, size: 30),
+            ),
+          ),
+        ),
+        // Down button
+        Positioned(
+          bottom: 20,
+          left: size.width / 2 - buttonSize / 2,
+          child: SizedBox(
+            width: buttonSize,
+            height: buttonSize,
+            child: ElevatedButton(
+              onPressed: () => game.changeDirection(Direction.down),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black.withOpacity(0.7),
+                foregroundColor: Colors.white,
+                shape: const CircleBorder(),
+              ),
+              child: const Icon(Icons.arrow_downward, size: 30),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
