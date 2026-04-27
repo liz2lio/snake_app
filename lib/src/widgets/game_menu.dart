@@ -36,7 +36,7 @@ class GameMenu extends StatelessWidget {
     }
 
     return Container(
-      color: const Color.fromARGB(255, 43, 42, 42).withOpacity(0.9),
+      color: const Color.fromARGB(255, 43, 41, 41),
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,

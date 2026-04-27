@@ -52,7 +52,7 @@ class GameControls extends StatelessWidget {
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           padding: EdgeInsets.zero,
-          backgroundColor: Colors.black.withOpacity(0.6),
+          backgroundColor: const Color.fromARGB(255, 27, 27, 27),
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
