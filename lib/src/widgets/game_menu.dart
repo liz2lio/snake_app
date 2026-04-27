@@ -44,10 +44,10 @@ class GameMenu extends StatelessWidget {
             Text(
               title,
               style: TextStyle(
-                fontSize: 48,
+                fontSize: 40,
                 fontWeight: FontWeight.bold,
                 color: titleColor,
-                letterSpacing: 4,
+                letterSpacing: 3,
               ),
             ),
             const SizedBox(height: 10),
