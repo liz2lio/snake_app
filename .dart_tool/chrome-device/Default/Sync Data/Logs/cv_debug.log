@@ -1,6 +1,0 @@
-{"logTime": "0427/152718", "correlationVector":"","action":"Microsoft.Sync.State.UserActionableError.30Sec", "result":"Error:7"}
-{"logTime": "0427/152718", "correlationVector":"","action":"Microsoft.Sync.State.Sign.In.UserActionableError.30Sec", "result":"Error:7"}
-{"logTime": "0427/153854", "correlationVector":"","action":"Microsoft.Sync.State.UserActionableError.30Sec", "result":"Error:7"}
-{"logTime": "0427/153854", "correlationVector":"","action":"Microsoft.Sync.State.Existing.UserActionableError.30Sec", "result":"Error:7"}
-{"logTime": "0427/153924", "correlationVector":"","action":"Microsoft.Sync.State.UserActionableError.1Min", "result":"Error:7"}
-{"logTime": "0427/153924", "correlationVector":"","action":"Microsoft.Sync.State.Existing.UserActionableError.1Min", "result":"Error:7"}
