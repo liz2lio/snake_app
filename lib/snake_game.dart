@@ -289,6 +289,15 @@ class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
     }
   }
 
+  void changeDirection(Direction newDirection) {
+    if ((currentDirection == Direction.up && newDirection != Direction.down) ||
+        (currentDirection == Direction.down && newDirection != Direction.up) ||
+        (currentDirection == Direction.left && newDirection != Direction.right) ||
+        (currentDirection == Direction.right && newDirection != Direction.left)) {
+      currentDirection = newDirection;
+    }
+  }
+
   @override
   KeyEventResult onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
     if (event is KeyDownEvent) {
