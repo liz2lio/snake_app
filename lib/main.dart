@@ -5,7 +5,10 @@ import 'src/config.dart';
 import 'src/widgets/score_card.dart';
 import 'src/widgets/game_menu.dart';
 
-void main() => runApp(const MaterialApp(home: MainGamePage()));
+void main() => runApp(const MaterialApp(
+      home: MainGamePage(),
+      debugShowCheckedModeBanner: false,
+    ));
 
 class MainGamePage extends StatefulWidget {
   const MainGamePage({super.key});
@@ -42,9 +45,12 @@ class _MainGamePageState extends State<MainGamePage> {
             child: GameWidget<SnakeGame>(
               game: _game,
               overlayBuilderMap: {
-                // 1. The HUD Score Overlay
+                // 1. HUD Score Overlay
                 'ScoreOverlay': (context, game) {
-                  return ScoreCard(score: game.score);
+                  return IgnorePointer(
+                    ignoring: true,
+                    child: ScoreCard(score: game.score),
+                  );
                 },
 
                 // 2. The Universal Menu (Start, Game Over, Win)
@@ -52,7 +58,6 @@ class _MainGamePageState extends State<MainGamePage> {
                   return ValueListenableBuilder<GameState>(
                     valueListenable: game.state,
                     builder: (context, state, _) {
-                      // Hide the menu if the game is currently being played
                       if (state == GameState.playing) {
                         return const SizedBox.shrink();
                       }
@@ -66,18 +71,17 @@ class _MainGamePageState extends State<MainGamePage> {
                             highScore: currentHigh,
                             onLevelSelect: (level) => game.setLevel(level),
                           );
-                          }, 
+                        },
                       );
                     },
                   );
                 },
 
-                // 3. Controls Overlay for touch devices
+                // 3. Updated Clustered Keypad Overlay
                 'ControlsOverlay': (context, game) {
                   return ControlsOverlay(game: game as SnakeGame);
                 },
               },
-              
               initialActiveOverlays: const ['ScoreOverlay', 'MenuOverlay', 'ControlsOverlay'],
             ),
           ),
@@ -89,89 +93,67 @@ class _MainGamePageState extends State<MainGamePage> {
 
 class ControlsOverlay extends StatelessWidget {
   final SnakeGame game;
-
   const ControlsOverlay({super.key, required this.game});
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final buttonSize = 60.0;
+    return ValueListenableBuilder<GameState>(
+      valueListenable: game.state,
+      builder: (context, state, _) {
+        // Only show buttons during active gameplay
+        if (state != GameState.playing) return const SizedBox.shrink();
 
-    return Stack(
-      children: [
-        // Left button
-        Positioned(
-          left: 20,
-          top: size.height / 2 - buttonSize / 2,
-          child: SizedBox(
-            width: buttonSize,
-            height: buttonSize,
-            child: ElevatedButton(
-              onPressed: () => game.changeDirection(Direction.left),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black.withOpacity(0.7),
-                foregroundColor: Colors.white,
-                shape: const CircleBorder(),
+        return Stack(
+          children: [
+            Positioned(
+              bottom: 40, // Clustered at the bottom for easy thumb access
+              left: 0,
+              right: 0,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // UP BUTTON
+                  _buildKey(Icons.arrow_upward, () => game.changeDirection(Direction.up)),
+                  const SizedBox(height: 8), 
+                  
+                  // ROW: LEFT, DOWN, RIGHT
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildKey(Icons.arrow_back, () => game.changeDirection(Direction.left)),
+                      const SizedBox(width: 8), 
+                      _buildKey(Icons.arrow_downward, () => game.changeDirection(Direction.down)),
+                      const SizedBox(width: 8), 
+                      _buildKey(Icons.arrow_forward, () => game.changeDirection(Direction.right)),
+                    ],
+                  ),
+                ],
               ),
-              child: const Icon(Icons.arrow_left, size: 30),
             ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildKey(IconData icon, VoidCallback onPressed) {
+    return SizedBox(
+      width: 65,
+      height: 65,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          padding: EdgeInsets.zero,
+          backgroundColor: Colors.black.withOpacity(0.6),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: Colors.white24, width: 1),
           ),
         ),
-        // Right button
-        Positioned(
-          right: 20,
-          top: size.height / 2 - buttonSize / 2,
-          child: SizedBox(
-            width: buttonSize,
-            height: buttonSize,
-            child: ElevatedButton(
-              onPressed: () => game.changeDirection(Direction.right),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black.withOpacity(0.7),
-                foregroundColor: Colors.white,
-                shape: const CircleBorder(),
-              ),
-              child: const Icon(Icons.arrow_right, size: 30),
-            ),
-          ),
-        ),
-        // Up button
-        Positioned(
-          top: 20,
-          left: size.width / 2 - buttonSize / 2,
-          child: SizedBox(
-            width: buttonSize,
-            height: buttonSize,
-            child: ElevatedButton(
-              onPressed: () => game.changeDirection(Direction.up),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black.withOpacity(0.7),
-                foregroundColor: Colors.white,
-                shape: const CircleBorder(),
-              ),
-              child: const Icon(Icons.arrow_upward, size: 30),
-            ),
-          ),
-        ),
-        // Down button
-        Positioned(
-          bottom: 20,
-          left: size.width / 2 - buttonSize / 2,
-          child: SizedBox(
-            width: buttonSize,
-            height: buttonSize,
-            child: ElevatedButton(
-              onPressed: () => game.changeDirection(Direction.down),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black.withOpacity(0.7),
-                foregroundColor: Colors.white,
-                shape: const CircleBorder(),
-              ),
-              child: const Icon(Icons.arrow_downward, size: 30),
-            ),
-          ),
-        ),
-      ],
+        child: Icon(icon, size: 32),
+      ),
     );
   }
 }
