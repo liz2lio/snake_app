@@ -4,7 +4,7 @@ Reviving the most popular game in the 90s but with an extra challenge.
 
 Play here << https://liz2lio.github.io/snake_app >>
 
-Game Objectives
+Game Objectives:
 The primary goal is to achieve the highest possible score by balancing survival with strategic color-matching. You must navigate a high-speed environment where the snake's physical length is both a score multiplier and an obstacle.
 
 Core Game Mechanics
