@@ -1,10 +1,10 @@
 # Snake & Match
 
-Reviving the most popular game in the 90s but with an extra challenge.
+Reviving the most popular cellular game in the 90s but with an extra challenge.
 
 <h2>Play here << https://liz2lio.github.io/snake_app >></h2>
 
-Game Objectives
+Game Objectives:
 The primary goal is to achieve the highest possible score by balancing survival with strategic color-matching. You must navigate a high-speed environment where the snake's physical length is both a score multiplier and an obstacle.
 
 Core Game Mechanics
@@ -30,5 +30,41 @@ Core Game Mechanics
 
 5. Persistence and Competitive Edge
     + High-Score tracking - the system utilizes local storage to persist the player's personal best.
-    + Game State Saving - Your current game progress is automatically saved to local storage, allowing you to continue playing even after closing and reopening the browser. The save state includes your snake's position, score, speed, and more. The game resumes from where you left off when you return. 
+    + Game State Saving - Your current game progress is automatically saved to local storage, allowing you to continue playing even after closing and reopening the browser. The save state includes your snake's position, score, speed, and more. The game resumes from where you left off when you return.
+
+Build With
+    + Flutter - Cross-platform UI toolkit
+    + Flame Engine - a Flutter game engin
+    + Share Preferences - For local data persistence
+    + Dart - For high-performance, object-oriented logic
+
+Project Structure
+lib/
+├── main.dart               # Entry point & Overlay management
+
+    ├── snake_game.dart         # Core Game Engine & Logic
+
+    └── src/
+        ├── config.dart         # Game constants (speed, colors, sizing)
+    
+        └── widgets/            # Decoupled UI Components
+    
+            ├── game_controls.dart  # Clustered D-Pad
+        
+            ├── game_menu.dart      # Start/GameOver/Win Screens
+        
+            └── score_card.dart     # Reactive HUD Score
+
+How to Run Locally
+1. Clone the repo:
+   git clone https://github.com/liz2lio/snake_app.git
+
+2. Install dependencies:
+   flutter pub get
+
+3. Run on Web:
+   flutter run -d chrome
+
+Key Challenge:
+Navigating the snake by swiping was not very responsive and timely. I also had challenges designing the keypad because it does't appear in the correct area. Initially, it doesn't show up at all. Used Co-pilot to resolve this issue but the keypads were still out of place, so fixed the coordinates.
 
