@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flame/camera.dart';
@@ -43,7 +44,7 @@ class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
   @override
   FutureOr<void> onLoad() async {
     await loadProgress(); //load saved data
-    
+        
     camera.viewport = FixedAspectRatioViewport(aspectRatio: 6/10);
     camera.viewfinder.anchor = Anchor.topLeft;
     spawnFood();
@@ -56,6 +57,9 @@ class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
     completedLevels.value = prefs.getStringList('completedLevels') ?? [];
 
     highScore.value = prefs.getInt('highScore') ?? 0;
+
+    // Load game state
+    await loadGameState();
   }
 
   //save to local storage
@@ -65,6 +69,81 @@ class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setStringList('completedLevels', completedLevels.value);
     }
+  }
+
+  // Load game state from shared preferences
+  Future<void> loadGameState() async {
+    final prefs = await SharedPreferences.getInstance();
+    final gameStateJson = prefs.getString('gameState');
+    if (gameStateJson != null) {
+      try {
+        final gameState = jsonDecode(gameStateJson) as Map<String, dynamic>;
+
+        // Load snake body
+        final snakeBodyData = gameState['snakeBody'] as List<dynamic>;
+        snakeBody = snakeBodyData.map((segment) {
+          final pos = segment['position'];
+          return SnakeSegment(
+            Vector2(pos['x'].toDouble(), pos['y'].toDouble()),
+            Color(segment['color'] as int),
+          );
+        }).toList();
+
+        // Load food
+        final foodPos = gameState['foodLocation'];
+        foodLocation = Vector2(foodPos['x'].toDouble(), foodPos['y'].toDouble());
+        foodColor = Color(gameState['foodColor'] as int);
+
+        // Load other state
+        currentDirection = Direction.values[gameState['currentDirection'] as int];
+        score.value = gameState['score'] as int;
+        speed = gameState['speed'] as double;
+        currentLevel = gameState['currentLevel'] as String;
+        state.value = GameState.values[gameState['gameState'] as int];
+        foodTimer = gameState['foodTimer'] as double;
+        moveTimer = gameState['moveTimer'] as double;
+
+        // If loaded state is playing, continue
+        if (state.value == GameState.playing) {
+          // Game is loaded and ready
+        }
+      } catch (e) {
+        // If loading fails, start fresh
+        resetGame();
+      }
+    } else {
+      // No saved state, start fresh
+      resetGame();
+    }
+  }
+
+  // Save game state to shared preferences
+  Future<void> saveGameState() async {
+    if (state.value != GameState.playing) return; // Only save when playing
+
+    final prefs = await SharedPreferences.getInstance();
+    final gameState = {
+      'snakeBody': snakeBody.map((segment) => {
+        'position': {'x': segment.position.x, 'y': segment.position.y},
+        'color': segment.color.value,
+      }).toList(),
+      'foodLocation': {'x': foodLocation.x, 'y': foodLocation.y},
+      'foodColor': foodColor.value,
+      'currentDirection': currentDirection.index,
+      'score': score.value,
+      'speed': speed,
+      'currentLevel': currentLevel,
+      'gameState': state.value.index,
+      'foodTimer': foodTimer,
+      'moveTimer': moveTimer,
+    };
+    await prefs.setString('gameState', jsonEncode(gameState));
+  }
+
+  // Clear saved game state
+  Future<void> clearSavedGameState() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('gameState');
   }
 
   //mark level complete
@@ -128,11 +207,16 @@ class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
     }
     
     spawnFood();
-    state.value = GameState.playing;  
+    state.value = GameState.playing;
+
+    // Clear saved game state when starting new game
+    clearSavedGameState();
   }
 
   void onDie() {
     state.value = GameState.gameOver;
+    // Clear saved state on death
+    clearSavedGameState();
   }
 
   @override
@@ -204,6 +288,9 @@ class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
       }
       snakeBody.first.position = newHead;
     }
+
+    // Save game state after each move
+    saveGameState();
   }
 
   void checkColorMatch() {
@@ -221,6 +308,8 @@ class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
         if (score.value >= 1000) {
           state.value = GameState.won;
           markLevelComplete(currentLevel);
+          // Clear saved state on win
+          clearSavedGameState();
         }
         break; 
       }
