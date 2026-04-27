@@ -41,13 +41,19 @@ Build With
 Project Structure
 lib/
 ├── main.dart               # Entry point & Overlay management
-├── snake_game.dart         # Core Game Engine & Logic
-└── src/
-    ├── config.dart         # Game constants (speed, colors, sizing)
-    └── widgets/            # Decoupled UI Components
-        ├── game_controls.dart  # Clustered D-Pad
-        ├── game_menu.dart      # Start/GameOver/Win Screens
-        └── score_card.dart     # Reactive HUD Score
+
+    ├── snake_game.dart         # Core Game Engine & Logic
+
+    └── src/
+        ├── config.dart         # Game constants (speed, colors, sizing)
+    
+        └── widgets/            # Decoupled UI Components
+    
+            ├── game_controls.dart  # Clustered D-Pad
+        
+            ├── game_menu.dart      # Start/GameOver/Win Screens
+        
+            └── score_card.dart     # Reactive HUD Score
 
 How to Run Locally
 1. Clone the repo:
