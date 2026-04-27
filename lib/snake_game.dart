@@ -109,11 +109,11 @@ class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
         }
       } catch (e) {
         // If loading fails, start fresh
-        resetGame();
+        resetGame(initialState: GameState.start);
       }
     } else {
       // No saved state, start fresh
-      resetGame();
+      resetGame(initialState: GameState.start);
     }
   }
 
@@ -192,7 +192,7 @@ class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
     resetGame();
   }
 
-  void resetGame() {
+  void resetGame({GameState initialState = GameState.playing}) {
     final random = Random();
     score.value = 0;
     snakeBody.clear();
@@ -207,7 +207,7 @@ class SnakeGame extends FlameGame with KeyboardEvents, TapCallbacks {
     }
     
     spawnFood();
-    state.value = GameState.playing;
+    state.value = initialState;
 
     // Clear saved game state when starting new game
     clearSavedGameState();
